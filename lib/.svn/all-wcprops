@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 26
+/svn/!svn/ver/25/trunk/lib
+END
+asm-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/25/trunk/lib/asm-4.0.jar
+END
+jarjar-1.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/2/trunk/lib/jarjar-1.0.jar
+END
+asm-analysis-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/25/trunk/lib/asm-analysis-4.0.jar
+END
+guava-r06.jar
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/5/trunk/lib/guava-r06.jar
+END
+asm-tree-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/25/trunk/lib/asm-tree-4.0.jar
+END
+asm-util-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/25/trunk/lib/asm-util-4.0.jar
+END
+asm-xml-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/25/trunk/lib/asm-xml-4.0.jar
+END
+asm-commons-4.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/25/trunk/lib/asm-commons-4.0.jar
+END

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO646-US" standalone="no"?>
+<jardesc>
+    <jar path="SoftwareAgingRCA/dist/test.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/SoftwareAgingRCA/test.jardesc" exportErrors="false" exportWarnings="false" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" mainClassHandleIdentifier="=SoftwareAgingRCA/test&lt;org.uniHD.test{TestCode.java[TestCode" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <javaElement handleIdentifier="=SoftwareAgingRCA/test"/>
+    </selectedElements>
+</jardesc>
