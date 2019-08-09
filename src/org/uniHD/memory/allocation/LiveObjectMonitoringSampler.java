@@ -72,6 +72,7 @@ public class LiveObjectMonitoringSampler implements Sampler {
         		//System.out.println("allocationSite:" + allocLocation);
         		//System.out.println("size:" + size);
             	allocated(objectID, newObj.getClass().getName(), allocLocation, size);
+            	// Following call creates a new PhantomReference (public class Cleaner extends PhantomReference<Object>)
             	create(newObj, new CleanerRunnable(objectID, allocLocation));
             	
             }
@@ -120,6 +121,9 @@ public class LiveObjectMonitoringSampler implements Sampler {
 		}
 	}
 
+	// Artur Andrzejak, Aug 2019:
+	// The run() method is called automatically, when the corresponding obj becomes "Phantom reachable"
+	// (i.e. ready to be finalized)
 	private final static class CleanerRunnable implements Runnable {
 		
 		private final String objectId;

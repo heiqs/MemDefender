@@ -112,7 +112,9 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 	
 	/**
 	 * Method to notify about the removal of a live object, given by its id.
-	 * 
+	 * This is called automatically (via org.uniHD.memory.allocation.LiveObjectMonitoringSampler.CleanerRunnable#run() )
+	 * when the corresp object becomes phantom-reachable
+	 * todo: Make this code more efficient, e.g. getConfig must be really slow!
 	 * @param freedObjectID
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
