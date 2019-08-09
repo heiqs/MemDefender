@@ -1,7 +1,5 @@
 To use the repository, a config file is needed. 
-It should be placed in the path of the running script of LiveObjectMonitoring.
-
-For example, it works for Mohammad like following:
+It should be placed under the lib directory of the script or application which uses LiveObjectMonitoring (LOM).
 
 --Parent dir
   	|
@@ -9,4 +7,4 @@ For example, it works for Mohammad like following:
   	|   |
   	|   |---config.properties
   	|
-  	|---runTest.sh (calls LOM jar)      
+  	|---script or application (calls LOM jar)
