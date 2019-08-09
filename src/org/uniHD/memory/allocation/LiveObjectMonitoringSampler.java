@@ -35,7 +35,10 @@ public class LiveObjectMonitoringSampler implements Sampler {
     private final Set<String> sourceCodeFiles;
     
     public LiveObjectMonitoringSampler(final String[] sourceFileRootFolders) {
+    	
     	sourceCodeFiles = SourceFileCollector.collectSourceFile(sourceFileRootFolders);
+		//System.out.println("sourecodefiles:");
+		//System.out.println(sourceCodeFiles);
 		//add handler for garbage collection events
 		addGcHandler();
 	}
@@ -50,7 +53,6 @@ public class LiveObjectMonitoringSampler implements Sampler {
         
     	    // identify the source code line responsible for the instantiation of the object on the lowest available level
             String allocLocation = null;
-            
             final StackTraceElement[] strace = new Exception().getStackTrace();
             int idx = 0;
             do {
@@ -60,10 +62,15 @@ public class LiveObjectMonitoringSampler implements Sampler {
                     break;
                 }
                 
-            } while (++idx <  strace.length);
+            } while (++idx < strace.length);
+            
             // collect the measured allocation
             if (allocLocation != null) {
+
             	final String objectID = toIdentifierString(newObj);
+        		//System.out.println("objectID:" + objectID);
+        		//System.out.println("allocationSite:" + allocLocation);
+        		//System.out.println("size:" + size);
             	allocated(objectID, newObj.getClass().getName(), allocLocation, size);
             	create(newObj, new CleanerRunnable(objectID, allocLocation));
             	

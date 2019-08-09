@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO646-US" standalone="no"?>
+<jardesc>
+    <jar path="SoftwareAgingRCA/dist/LOMClient.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/SoftwareAgingRCA/LOMClient.jardesc" exportErrors="false" exportWarnings="false" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" mainClassHandleIdentifier="=SoftwareAgingRCA/src&lt;org.uniHD.memory.util{LOMClient.java[LOMClient" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <javaElement handleIdentifier="=SoftwareAgingRCA/src&lt;org.uniHD.memory.util{LOMClient.java"/>
+        <javaElement handleIdentifier="=SoftwareAgingRCA/src&lt;org.uniHD.memory.util{Constants.java"/>
+    </selectedElements>
+</jardesc>

@@ -46,7 +46,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 	/**
 	 * Some tuning parameters for the hash maps.
 	 */
-	private final static int INITIAL_OBJECTS_CAPACITY = 100000;
+	private final static int INITIAL_OBJECTS_CAPACITY = 1000000;
 	private final static int INITIAL_ALLOCATIONS_CAPACITY = 100000;
 	//Determines initial size of HashMap which stores GenerationInformation per allocation site
 	private final static int INITIAL_GENERATIONS_PER_OBJECT_CAPACITY = 4;

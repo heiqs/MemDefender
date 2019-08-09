@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry excluding="src/|test/" kind="src" path=""/>
+	<classpathentry exported="true" kind="lib" path="/usr/share/java/junit4.jar"/>
+	<classpathentry exported="true" kind="lib" path="/java-allocation-instrumenter/dist/allocation.jar" sourcepath="/java-allocation-instrumenter/java-allocation-instrumenter/src/main/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-7-openjdk-amd64"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

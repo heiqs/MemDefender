@@ -16,7 +16,7 @@ final class SourceFileCollector {
 	 * 					investigation.
 	 */
     static final Set<String> collectSourceFile(String[] basePaths) {
-
+        
         final Set<String> result = new HashSet<String>();
         
         final List<Entry> fileList = new ArrayList<Entry>();

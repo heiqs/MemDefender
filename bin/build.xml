@@ -1,0 +1,47 @@
+<project name="LiveObjectMonitor" basedir=".">
+  <description>
+    Builds the Live Object Monitor Java agent.
+  </description>
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+
+  <target name="init">
+    <mkdir dir="${build}"/>
+    <mkdir dir="${dist}"/>
+  </target>
+
+  <path id="LiveObjectMonitor.classpath">
+     <fileset dir="lib">
+       <include name="**/*.jar"/>
+     </fileset>
+  </path>
+
+  <target name="base_compile" depends="init" description="basic compile">
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+      <classpath refid="LiveObjectMonitor.classpath"/>
+    </javac>
+  </target>
+
+  <target name="dist" depends="base_compile" description="result">
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+	     classpath="lib/jarjar-1.0.jar" />
+    <jarjar destfile="${dist}/LiveObjectMonitor.jar">
+      <manifest>
+	<attribute name="Boot-Class-Path" value="./LiveObjectMonitor.jar"/>
+	<attribute name="Premain-Class" value="org.uniHD.memory.LiveObjectMonitorAgent"/>
+	<attribute name="Can-Redefine-Classes" value="true" />
+	<attribute name="Can-Retransform-Classes" value="true" />
+	<attribute name="Main-Class" value="NotSuitableAsMain" />
+      </manifest>
+      <fileset dir="${build}"/>
+      <zipfileset src="lib/allocation.jar" />
+    </jarjar>
+  </target>
+
+  <target name="clean" description="clean up" >
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+
+</project>
