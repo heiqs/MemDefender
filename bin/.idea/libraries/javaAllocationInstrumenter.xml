@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="javaAllocationInstrumenter">
-    <CLASSES />
-    <JAVADOC />
-    <SOURCES>
-      <root url="file://$PROJECT_DIR$/../java-allocation-instrumenter/java-allocation-instrumenter/src/main/java" />
-    </SOURCES>
-  </library>
-</component>
