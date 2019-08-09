@@ -9,11 +9,3 @@ Leak injection:
 To use MemDefender as a leak injector, a config file is required.
 
 It should be placed under the lib directory of the script or application which uses LiveObjectMonitoring (LOM).
-
---Parent dir
-  	|
-  	|---lib
-  	|   |
-  	|   |---config.properties
-  	|
-  	|---script or application (calls LOM jar)
