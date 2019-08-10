@@ -1,8 +1,8 @@
 package org.uniHD.memory.util;
 
 import java.io.*;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+
 import com.google.common.flogger.FluentLogger;
 
 // A class holding configuration data
@@ -26,8 +26,8 @@ public class Configuration {
     private static String KEY_injectorSelection = "injector.selection";
     public int injectorLeakRatio = 100;
     private static String KEY_injectorLeakRatio = "injector.leakRatio";
-    public String[] injectorSites;
-    static String KEY_injectorSites = "injector.sites";
+    public Set<String> injectorSites;
+    private static String KEY_injectorSites = "injector.sites";
 
 
     public void setConfigsFromPropertiesFile(String pathToPropertiesFile) {
@@ -45,8 +45,9 @@ public class Configuration {
         injectorOn = Boolean.parseBoolean((String) props.getProperty(KEY_injectorOn, "False"));
         injectorSelection = Boolean.parseBoolean((String) props.getProperty(KEY_injectorSelection, "False"));
         injectorLeakRatio = Integer.parseInt((String) props.getProperty(KEY_injectorLeakRatio, "100"));
-        String commaSeparatedSites = (String) props.getProperty(KEY_injectorSites, "");
-        injectorSites = commaSeparatedSites.split(",");
+        String[] commaSeparatedSitesArray = props.getProperty(KEY_injectorSites, "").toLowerCase().split(",");
+        injectorSites = new HashSet<>();
+        Collections.addAll(injectorSites, commaSeparatedSitesArray);
 
         logger.atFine().log("Parsed properties are: %s", this);
     }

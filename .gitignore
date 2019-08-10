@@ -5,3 +5,5 @@ MemDefender.iml
 
 docs/
 build/
+
+!.idea/

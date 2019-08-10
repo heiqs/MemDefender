@@ -4,6 +4,7 @@ import com.google.common.flogger.FluentLogger;
 import com.google.common.flogger.LoggerConfig;
 import com.google.monitoring.runtime.instrumentation.Sampler;
 import com.sun.management.GarbageCollectionNotificationInfo;
+import org.uniHD.memory.util.Configuration;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -15,10 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.GarbageCollectorMXBean;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.uniHD.memory.LiveObjectMap.*;
@@ -38,12 +36,14 @@ public class LiveObjectMonitoringSampler implements Sampler {
 	static {
 		logger.atFine().log("LiveObjectMonitoringSampler created");
 	}
-	static Random rand = new Random();
 
+	static Random rand = new Random();
     private final Set<String> sourceCodeFiles;
-    
-    public LiveObjectMonitoringSampler(final String[] sourceFileRootFolders) {
+	private final Configuration config;
+
+    public LiveObjectMonitoringSampler(final String[] sourceFileRootFolders, Configuration configuration) {
     	sourceCodeFiles = SourceFileCollector.collectSourceFile(sourceFileRootFolders);
+    	config = configuration;
 		//add handler for garbage collection events
 		addGcHandler();
 	}
@@ -56,35 +56,58 @@ public class LiveObjectMonitoringSampler implements Sampler {
     @Override
     public void sampleAllocation(final int count, final String desc, final Object newObj, final long size)  {
 
-		logger.atFine().atMostEvery(500, TimeUnit.MILLISECONDS).log("sampleAllocation entered: count=%d, desc=%s, obj=%s, ", count, desc, size);
 		// identify the source code line responsible for the instantiation of the object on the lowest available level
 		String allocLocation = null;
 		final StackTraceElement[] strace = new Exception().getStackTrace();
 		int idx = 0;
+		// todo: make the following filter for client-code-only more robust and faster
+		// The following checks whether any part of the source code paths is contained in one of the stack trace row,
+		// and if yes, this row is enhanced with corresp. source line number and considered as allocLocation
 		do {
-
 			if (sourceCodeFiles.contains(strace[idx].getClassName()))  {
 				allocLocation = strace[idx].getClassName() + ":" + strace[idx].getLineNumber();
 				break;
 			}
-
 		} while (++idx < strace.length);
+        logger.atFine().atMostEvery(500, TimeUnit.MILLISECONDS).log("In sampleAllocation: allocLocation=%s, objectID=%s, desc=%s, strack=%s",
+				allocLocation, toIdentifierString(newObj), desc, strace);
 
-		// collect the measured allocation
-		if (allocLocation != null) {
-
-			final String objectID = toIdentifierString(newObj);
-			//System.out.println("objectID:" + objectID);
-			//System.out.println("allocationSite:" + allocLocation);
-			//System.out.println("size:" + size);
+        // collect the measured allocation
+        if (allocLocation != null) {
+            final String objectID = toIdentifierString(newObj);
+            //System.out.println("objectID:" + objectID);
+            //System.out.println("allocationSite:" + allocLocation);
+            //System.out.println("size:" + size);
 			allocated(objectID, newObj.getClass().getName(), allocLocation, size);
 			// Following call creates a new PhantomReference (public class Cleaner extends PhantomReference<Object>)
 			create(newObj, new CleanerRunnable(objectID, allocLocation));
-
+			createLeaks(newObj, objectID, allocLocation);
 		}
+
     }
-    
-    /**
+
+    final static int LEAK_LIST_INIT_CAPACITY = 1000;
+    static private List<Object> listOfLeaks = new ArrayList<Object>(LEAK_LIST_INIT_CAPACITY);
+
+    private void createLeaks(final Object newObj, String objectID, String allocLocation) {
+    	if (! config.injectorOn) return;
+		if (rand.nextInt(100) > config.injectorLeakRatio) return;
+
+    	if (config.injectorSelection) {
+    		// Check whether current allocation site is in config.injectorSites
+			String candidateAllocationSite = allocLocation.toLowerCase();
+			if (! config.injectorSites.contains(candidateAllocationSite)) {
+				return;
+			}
+		}
+		// Ready to inject leak: add object to a static array
+		listOfLeaks.add(newObj);
+		logger.atFine().atMostEvery(200, TimeUnit.MILLISECONDS).log("Leak created for allocation site= %s and obj= %s, ", allocLocation, newObj);
+	}
+
+
+
+	/**
      * Method to build a java standard object identifier string from the object's native hash and class.
      * 
      * @param obj

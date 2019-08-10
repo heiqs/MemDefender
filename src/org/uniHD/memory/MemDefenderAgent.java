@@ -23,6 +23,7 @@ import com.google.common.flogger.FluentLogger;
 
 public class MemDefenderAgent {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+    private static Configuration config;
 
     // Setting logging properties for all files
     static {
@@ -36,8 +37,6 @@ public class MemDefenderAgent {
         //logger.atInfo().log("[MD Agent] Current logging level is: %s. If you don't see expected  messages, read " +
         //		"http://bit.ly/2M9VhMH", LoggerConfig.of(logger).getLevel());
     }
-
-    public static Configuration config;
 
     public static void premain(String agentArgs, Instrumentation inst) throws IOException {
         logger.atFine().log("[MD Agent] Entered premain, arguments: %s", agentArgs);
@@ -54,7 +53,7 @@ public class MemDefenderAgent {
         // delegate to the JAI
         AllocationInstrumenter.premain(config.JAIArgs, inst);
         logger.atFine().log("[MD Agent] Starting code instrumentation");
-        instrument(config.sourcePaths);
+        instrument(config.sourcePaths, config);
         logger.atFine().log("[MD Agent] Instrumentation finished, starting Live Object Dump server");
         startServer(config.appName);
         logger.atFine().log("[MD Agent] Live Object Dump service started");
@@ -67,9 +66,9 @@ public class MemDefenderAgent {
      * @param sourcePaths
      * @return a {@link LOMServer} handle.
      */
-    private final static void instrument(final String[] sourcePaths) {
+    private final static void instrument(final String[] sourcePaths, Configuration config) {
         // initialize the object allocation sampler
-        AllocationRecorder.addSampler(new LiveObjectMonitoringSampler(sourcePaths));
+        AllocationRecorder.addSampler(new LiveObjectMonitoringSampler(sourcePaths, config));
     }
 
     private final static void startServer(final String appName) throws IOException {

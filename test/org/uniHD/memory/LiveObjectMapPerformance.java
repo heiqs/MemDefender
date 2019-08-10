@@ -66,10 +66,10 @@ public class LiveObjectMapPerformance {
 			for (int i = 0; i < 100; i++) {
 				final int deAlDecision = random.nextInt(4);
 				if (deAlDecision < allocateToDeallocate) {
-					LiveObjectMap.allocated(""+nextObjectToAllocate.getAndIncrement(), 
+/*					LiveObjectMap.allocated(""+nextObjectToAllocate.getAndIncrement(),
 																classes[random.nextInt(100)], 
 																sources[random.nextInt(100)], 
-																Math.abs(random.nextLong()));
+																Math.abs(random.nextLong()));*/
 				} else {
 					try {
 						LiveObjectMap.finalized(""+nextObjectToDeallocate.getAndIncrement());

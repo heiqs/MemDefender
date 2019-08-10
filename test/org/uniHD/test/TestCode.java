@@ -1,5 +1,7 @@
 package org.uniHD.test;
 
+import java.util.Random;
+
 public class TestCode {
 	
 	private final java.util.Collection<byte[]> leakingObjects = new java.util.LinkedList<byte[]>();
@@ -41,7 +43,7 @@ public class TestCode {
 		}
 		
 	}
-	
+	static Random rand = new Random();
     /**
      * @param args
      * @throws InterruptedException 
@@ -53,7 +55,21 @@ public class TestCode {
         tc = null;
         
         // delay execution: Thread.sleep(10000);
+		// Create 1e6 Strings
+		int NUM_ITER = 1000000;
+		Integer lastValue = 10;
+		for (int i = 0; i < NUM_ITER; i++) {
+			System.out.println("Last value is:" + lastValue );
+			Integer value = rand.nextInt(lastValue+ i % 10000);
+			String myStringy = String.format("This is my value: %d", value);
+			lastValue = someResult(myStringy, lastValue );
+		}
         
         System.out.println("Test done.");
     }
+
+    public static Integer someResult(String myString, Integer myValue) {
+		Integer result = Math.abs((myString.hashCode()*2 + myValue*myValue) % 10000);
+		return result;
+	}
 }

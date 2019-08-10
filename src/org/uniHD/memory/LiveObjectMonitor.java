@@ -6,6 +6,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import org.uniHD.memory.allocation.LiveObjectMonitoringSampler;
+import org.uniHD.memory.util.Configuration;
 import org.uniHD.memory.util.LOMServer;
 
 import com.google.monitoring.runtime.instrumentation.AllocationRecorder;
@@ -82,9 +83,10 @@ public class LiveObjectMonitor {
 	 * @throws IOException
 	 */
 	private final static LOMServer instrument(final String[] sourcePaths, final String appMain) throws IOException {
-		
+
+		Configuration dummyConfiguration = new Configuration();
 		// initialize the object allocation sampler
-		AllocationRecorder.addSampler(new LiveObjectMonitoringSampler(sourcePaths));
+		AllocationRecorder.addSampler(new LiveObjectMonitoringSampler(sourcePaths, dummyConfiguration));
 		System.out.println("Allocation sampler installed!");
 		
 		// prepare the dump-request server

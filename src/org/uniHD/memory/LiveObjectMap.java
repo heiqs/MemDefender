@@ -28,27 +28,25 @@ import static org.uniHD.memory.util.Constants.COLUMN_SEPARATOR;
 public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap.AllocationSiteDetails>> {
 	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	static {
-		logger.atInfo().log("LiveObjectMap created");
+		logger.atFine().log("LiveObjectMap created");
 	}
 		/**
          *	Number of old-generation gcs after which memory leak detection algorithm is executed
          */
 	private final static int GCS_PER_DETECTION = 2;
-
 	/**
 	 * Keep track of the current generation of garbage collections and of the number of major GCS
 	 */
 	private static long currentGen = 0;
 	private static long majorGCs = 0;
-	static Random rand = new Random();
 
 	/**
 	 * Some tuning parameters for the hash maps.
 	 */
-	private final static int INITIAL_OBJECTS_CAPACITY = 1000000;
-	private final static int INITIAL_ALLOCATIONS_CAPACITY = 100000;
+	private final static int INITIAL_OBJECTS_CAPACITY = 100000;
+	private final static int INITIAL_ALLOCATIONS_CAPACITY = 10000;
 	//Determines initial size of HashMap which stores GenerationInformation per allocation site
-	private final static int INITIAL_GENERATIONS_PER_OBJECT_CAPACITY = 4;
+	private final static int INITIAL_GENERATIONS_PER_OBJECT_CAPACITY = 10;
 	//Determines if the number of objects that have been deallocated in one generation g should be tracked (per allocation site and generation)
 	private final static boolean TRACK_DEALLOCATIONS = true;
 
@@ -70,33 +68,20 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 			new ConcurrentHashMap<String, AllocationSiteDetails>(INITIAL_ALLOCATIONS_CAPACITY);
 	
 	private LiveObjectMap() { /* supports static referencing only */
-		LoggerConfig.of(logger).setLevel(Level.FINE);
 	}
 
-	public final static String getConfig(String config) throws FileNotFoundException, IOException {
-		logger.atConfig().log("Getting configuration %s", config);
-		//new FileInputStream("/home/felix/workspace/SoftwareAgingRCA_/resources/config.properties")
-		Properties prop = new Properties();
-		//ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		//InputStream input = classLoader.getResourceAsStream("config.properties");
-	    try (InputStream input =
-	    		new FileInputStream(System.getProperty("user.dir") + "/lib/config.properties")) {
-	    	prop.load(input);
-	    	return prop.getProperty(config);
-	    }
-	}
 	/**
 	 * Method to notify about the introduction of a new live object, its size and the source code location it was instantiated at.
 	 * 
 	 * @param allocatedObjectID
 	 * @param clazz
-	 * @param source
+	 * @param allocationSite
 	 * @param objectSize
 	 */
-	public final static void allocated (final String allocatedObjectID, final String clazz, final String source, 
+	public final static void allocated (final String allocatedObjectID, final String clazz, final String allocationSite,
 																final long objectSize) {
 		
-		final String groupId = toGroupIdentifier(source, clazz);
+		final String groupId = toGroupIdentifier(allocationSite, clazz);
 		//System.out.println("@" + groupId + " @ " + System.currentTimeMillis());
 		//store object generation temporarily so the generation is not different for ALLOCATIONS and OBJECTS
 		final long objectGen = currentGen;
@@ -110,7 +95,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		if ((oldEntry = ALLOCATIONS.putIfAbsent(groupId, new AllocationSiteDetails(objectSize, objectGen))) != null) {
 			oldEntry.addObjectDetails(objectSize, objectGen);
 		}
-		logger.atFine().atMostEvery(100, TimeUnit.MILLISECONDS).log("Allocated obj with id: %s", allocatedObjectID);
+		// logger.atFine().atMostEvery(100, TimeUnit.MILLISECONDS).log("In allocated: %s and class %s", allocationSite, clazz);
 	}
 	
 	/**
@@ -126,48 +111,22 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		
 		// since there will be only one object with the same ID at any time and finalize() is only called once for it, no 
 		// synchronisation is needed
+
 		final SingleAllocationDetails entry;
 		if ((entry = OBJECTS.remove(freedObjectID)) != null) {
     		//System.out.println("entry:" + entry);
 			// conflicts because of concurrency may only occur during the manipulation of the allocation size
 			//todo: understand comment above. remove and addObjectDetails are synchronized
-			try {
-				String leakRatio = getConfig("leakRatio");
-				String allocation =  getConfig("allocation");
-				String selection =  getConfig("selection");
-				String injection =  getConfig("injection");
 
-				Boolean chekedAllocation = false;
-				List<String> allocations = Arrays.asList(allocation.split("\\s*,\\s*"));
-				if (Boolean.valueOf(selection)){
-					for (String alloc : allocations){
-						chekedAllocation = entry.groupIdentifier.toLowerCase().contains(alloc.toLowerCase());
-						if (chekedAllocation) {
-						    break;
-						}
-					}	
-				} else {
-					chekedAllocation = true;
-				}
-
-				if (rand.nextInt(100) < Integer.parseInt(leakRatio) && chekedAllocation && Boolean.valueOf(injection)) {
-				    System.out.println("!!" + entry.groupIdentifier + " @ " + System.currentTimeMillis());
-				} else {
-					//System.out.println("!@" + entry.groupIdentifier + " @ " + System.currentTimeMillis());
-					ALLOCATIONS.get(entry.groupIdentifier).removeObjectDetails(entry.objectSize, entry.generation);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+			// Remove objects data from the statistics
+			ALLOCATIONS.get(entry.groupIdentifier).removeObjectDetails(entry.objectSize, entry.generation);
 		}
 	}
 	
 	/**
 	 * @return the number of Objects currently registered.
 	 */
-	final static int numObjects() {
+	public static int numObjects() {
 		
 		return OBJECTS.size();
 	}
@@ -175,7 +134,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 	/**
 	 * @return the number of class-source location summary lines.
 	 */
-	final static int numSummaryLines() {
+	public static int numSummaryLines() {
 		
 		return ALLOCATIONS.size();
 	}
