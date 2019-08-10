@@ -30,16 +30,16 @@ This is done as follows:
 * Copy the file `MemDefender.jar` (directory `dist` of this project) to the directory where you start your Java application
 * Start you application via:
 
-`java` **`-javaagent:MemDefender.jar=<your-app-src-paths>,<your-app-name>`**  `<your normal run parameters>`
+`java` **`-javaagent:MemDefender.jar='your-app-src-paths','your-app-name'`**  `<your normal run parameters>`
 
-Here '<your-app-src-paths>' is a list of colon-separated paths to the code root directories of your application, and '<your-app-name>' is 
+Here 'your-app-src-paths' is a list of colon-separated paths to the code root directories of your application, and 'your-app-name' is 
 prefix of the file for reporting results.
 
 Or, if you want to use non-standard settings for MemDefender or leak injection, via 
 
-`java` **`-javaagent:MemDefender.jar=<path-to-config-file>`**  `<your normal run parameters>`
+`java` **`-javaagent:MemDefender.jar='path-to-config-file'`**  'your normal run parameters'`
 
-Here '<path-to-config-file>' is a path to a configuration file `config.properties` explained below.
+Here 'path-to-config-file' is a path to a configuration file `config.properties` explained below.
 
 ### Configuring MemDefender
 The tool can be configured via supplying a `config.properties` file. This file can contain the 
