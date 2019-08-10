@@ -30,12 +30,12 @@ This is done as follows:
 * Copy the file `MemDefender.jar` (directory `dist` of this project) to the directory where you start your Java application
 * Start you application via:
 
-`java` **`-javaagent:MemDefender.jar=<your-app-src-path>,<your-app-name>`**  `<your normal run parameters>`
+`java` **`-javaagent:MemDefender.jar=<your-app-src-paths>,<your-app-name>`**  `<your normal run parameters>`
 
-Here <your-app-src-path> is a path to a the code root directory paths of your application, and <your-app-name> is 
-(optional) prefix of the file for reporting results (if missing, `memDefender-report` is used).
+Here <your-app-src-paths> is a list of colon-separated paths to a the code root directories of your application, and <your-app-name> is 
+prefix of the file for reporting results.
 
-or, if you want to use non-standard settings for MemDefender, via 
+Or, if you want to use non-standard settings for MemDefender or leak injection, via 
 
 `java` **`-javaagent:MemDefender.jar=<path-to-config-file>`**  `<your normal run parameters>`
 
@@ -46,7 +46,7 @@ The tool can be configured via supplying a `config.properties` file. This file c
 following entries:
 
 ```
-general.sourcePath=<your-app-src-path>
+general.sourcePaths=<your-app-src-paths>
 general.appName=<your-app-name>
 injector.on=true
 injector.leakRatio=100
@@ -54,7 +54,7 @@ injector.selection=true
 injector.sites=<position-of-allocation-site-1>[,<position-of-allocation-site-2>]
 ```
 
-The parameters `general.sourcePath` and `general.appName` specify respectively <your-app-src-path> and <your-app-name> explained above.
+The parameters `general.sourcePaths` and `general.appName` specify respectively <your-app-src-paths> and <your-app-name> explained above.
 The other parameters have the following meaning:
 * `injector.on`: if true, leak injection is active
 * `injector.leakRatio`: specifies the percent probability that an objected is not deallocated (i.e. leaked). 

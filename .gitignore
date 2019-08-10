@@ -4,3 +4,4 @@ heiqs-MemDefender- MemDefender- An Allocation Monitoring and Leak Injection Tool
 MemDefender.iml
 
 docs/
+build/

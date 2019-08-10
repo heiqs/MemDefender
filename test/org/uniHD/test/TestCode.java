@@ -31,8 +31,11 @@ public class TestCode {
 		Thread.sleep(3000);
 		in/=7;
 		in =null;
-		
-		int leakAmount = new java.util.Random().nextInt(Integer.parseInt(System.getProperty("java.leakStrength.1")));
+
+		String leakStrength = System.getProperty("java.leakStrength.1");
+		leakStrength = leakStrength == null ? "1000" : leakStrength;
+
+		int leakAmount = new java.util.Random().nextInt(Integer.parseInt(leakStrength));
 		if (leakAmount > 1) {
 			leakingObjects.add(new byte[leakAmount]);
 		}
