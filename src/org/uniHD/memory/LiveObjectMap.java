@@ -1,5 +1,8 @@
 package org.uniHD.memory;
 
+import com.google.common.flogger.FluentLogger;
+import com.google.common.flogger.LoggerConfig;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,6 +11,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import static org.uniHD.memory.LiveObjectMap.finalized;
 import static org.uniHD.memory.util.Constants.COLUMN_SEPARATOR;
@@ -16,31 +21,25 @@ import static org.uniHD.memory.util.Constants.COLUMN_SEPARATOR;
  * Shadow registry for live objects of the JVM.
  * 
  * @author Felix Langner
+ * @author Mohammad Ghanavati
+ * @author Artur Andrzejak
  * @since 01/14/2013
- *
  */
 public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap.AllocationSiteDetails>> {
-
-	/**
-	 *	Number of old-generation gcs after which memory leak detection algorithm is executed
-	 */
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+	static {
+		logger.atInfo().log("LiveObjectMap created");
+	}
+		/**
+         *	Number of old-generation gcs after which memory leak detection algorithm is executed
+         */
 	private final static int GCS_PER_DETECTION = 2;
-	/*
-		Minimal genCount needed to be viewed as a possible leak
-	 */
-	private final static int POTENTIAL_LEAK_THRESHOLD = 5;
-
-	/**
-	 * Minimal quotient of two successive genCounts that signifies the gap between leaks and non-leaks
-	 */
-	private final static int GENCOUNT_GAP_THRESHOLD = 4;
 
 	/**
 	 * Keep track of the current generation of garbage collections and of the number of major GCS
-	 * TODO: use unsigned arithmetics to increase max number of generations, inhibit overflow; or: use long
 	 */
-	private static int currentGen = 0;
-	private static int majorGCs = 0;
+	private static long currentGen = 0;
+	private static long majorGCs = 0;
 	static Random rand = new Random();
 
 	/**
@@ -70,9 +69,12 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 	private final static ConcurrentMap<String, AllocationSiteDetails> ALLOCATIONS =
 			new ConcurrentHashMap<String, AllocationSiteDetails>(INITIAL_ALLOCATIONS_CAPACITY);
 	
-	private LiveObjectMap() { /* supports static referencing only */ }
+	private LiveObjectMap() { /* supports static referencing only */
+		LoggerConfig.of(logger).setLevel(Level.FINE);
+	}
 
-	public final static String getConfig(String config) throws FileNotFoundException, IOException{
+	public final static String getConfig(String config) throws FileNotFoundException, IOException {
+		logger.atConfig().log("Getting configuration %s", config);
 		//new FileInputStream("/home/felix/workspace/SoftwareAgingRCA_/resources/config.properties")
 		Properties prop = new Properties();
 		//ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -97,7 +99,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		final String groupId = toGroupIdentifier(source, clazz);
 		//System.out.println("@" + groupId + " @ " + System.currentTimeMillis());
 		//store object generation temporarily so the generation is not different for ALLOCATIONS and OBJECTS
-		int objectGen = currentGen;
+		final long objectGen = currentGen;
 
 		// since there will be only one object with the same ID at any time and finalize() is only called once for it, no 
 		// synchronisation is needed
@@ -108,6 +110,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		if ((oldEntry = ALLOCATIONS.putIfAbsent(groupId, new AllocationSiteDetails(objectSize, objectGen))) != null) {
 			oldEntry.addObjectDetails(objectSize, objectGen);
 		}
+		logger.atFine().atMostEvery(100, TimeUnit.MILLISECONDS).log("Allocated obj with id: %s", allocatedObjectID);
 	}
 	
 	/**
@@ -230,21 +233,20 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 	}
 	 */
 
-	public static int getCurrentGen() {
+	public static long getCurrentGen() {
 		return currentGen;
 	}
 
 	//increment currentGen and check for possible overflow
 	public synchronized static void incrementCurrentGen() {
-		if(++LiveObjectMap.currentGen == Integer.MAX_VALUE){
+		if(++LiveObjectMap.currentGen == Long.MAX_VALUE){
 			handleOverflow();
 		}
 	}
 
-	//todo: implement handling of int overflow (not really needed in detection approach by Szôr)
 	private static void handleOverflow() {
 		System.out.println("Integer overflow in currentGen.");
-		System.exit(0);
+		System.exit(-1);
 	}
 
 
@@ -299,9 +301,9 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		
 		private final String groupIdentifier;
 		private final long objectSize;
-		private final int generation;
+		private final long generation;
 		
-		private SingleAllocationDetails(final String groupIdentifier, final long objectSize, int objectGen) {
+		private SingleAllocationDetails(final String groupIdentifier, final long objectSize, long objectGen) {
 			
 			this.groupIdentifier = groupIdentifier;
 			this.objectSize = objectSize;
@@ -327,17 +329,17 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 		//Key g is the generation, value stores Info about g
 		// (e.g. #objects allocated in generation g,#deallocated objects allocated in generation g)
 		//a concurrentMap is not needed, since all methods of AllocationSiteDetails are synchronized
-		private Map<Integer, GenerationInfo> generations;
+		private Map<Long, GenerationInfo> generations;
 
-		private AllocationSiteDetails(long initialSize, int objectGen) {
+		private AllocationSiteDetails(long initialSize, long objectGen) {
 			
 			this.allocatedBytes = initialSize;
 
-			this.generations 	= new HashMap<Integer, GenerationInfo>(INITIAL_GENERATIONS_PER_OBJECT_CAPACITY);
+			this.generations 	= new HashMap<Long, GenerationInfo>(INITIAL_GENERATIONS_PER_OBJECT_CAPACITY);
 			this.generations.put(objectGen, new GenerationInfo(1,0,0));
 		}
 		
-		private synchronized final void addObjectDetails(final long objectSize, int objectGen) {
+		private synchronized final void addObjectDetails(final long objectSize, long objectGen) {
 			
 			this.allocatedBytes += objectSize;
 			this.numberOfAllocations++;
@@ -354,7 +356,7 @@ public final class LiveObjectMap implements Iterable<Entry<String, LiveObjectMap
 
 		}
 		
-		private synchronized final void removeObjectDetails(final long objectSize, int objectGen) {
+		private synchronized final void removeObjectDetails(final long objectSize, long objectGen) {
 			
 			this.allocatedBytes -= objectSize;
 			this.numberOfFinalAllocations--;

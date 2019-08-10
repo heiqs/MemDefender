@@ -1,5 +1,7 @@
 package org.uniHD.memory.allocation;
 
+import com.google.common.flogger.FluentLogger;
+import com.google.common.flogger.LoggerConfig;
 import com.google.monitoring.runtime.instrumentation.Sampler;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.uniHD.memory.LiveObjectMap.*;
 import static sun.misc.Cleaner.create;
@@ -30,15 +33,17 @@ import static sun.misc.Cleaner.create;
  */
 
 public class LiveObjectMonitoringSampler implements Sampler {
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+
+	static {
+		logger.atFine().log("LiveObjectMonitoringSampler created");
+	}
 	static Random rand = new Random();
 
     private final Set<String> sourceCodeFiles;
     
     public LiveObjectMonitoringSampler(final String[] sourceFileRootFolders) {
-    	
     	sourceCodeFiles = SourceFileCollector.collectSourceFile(sourceFileRootFolders);
-		//System.out.println("sourecodefiles:");
-		//System.out.println(sourceCodeFiles);
 		//add handler for garbage collection events
 		addGcHandler();
 	}
@@ -50,32 +55,33 @@ public class LiveObjectMonitoringSampler implements Sampler {
      */
     @Override
     public void sampleAllocation(final int count, final String desc, final Object newObj, final long size)  {
-        
-    	    // identify the source code line responsible for the instantiation of the object on the lowest available level
-            String allocLocation = null;
-            final StackTraceElement[] strace = new Exception().getStackTrace();
-            int idx = 0;
-            do {
-            	
-                if (sourceCodeFiles.contains(strace[idx].getClassName()))  {
-                    allocLocation = strace[idx].getClassName() + ":" + strace[idx].getLineNumber();
-                    break;
-                }
-                
-            } while (++idx < strace.length);
-            
-            // collect the measured allocation
-            if (allocLocation != null) {
 
-            	final String objectID = toIdentifierString(newObj);
-        		//System.out.println("objectID:" + objectID);
-        		//System.out.println("allocationSite:" + allocLocation);
-        		//System.out.println("size:" + size);
-            	allocated(objectID, newObj.getClass().getName(), allocLocation, size);
-            	// Following call creates a new PhantomReference (public class Cleaner extends PhantomReference<Object>)
-            	create(newObj, new CleanerRunnable(objectID, allocLocation));
-            	
-            }
+		logger.atFine().atMostEvery(500, TimeUnit.MILLISECONDS).log("sampleAllocation entered: count=%d, desc=%s, obj=%s, ", count, desc, size);
+		// identify the source code line responsible for the instantiation of the object on the lowest available level
+		String allocLocation = null;
+		final StackTraceElement[] strace = new Exception().getStackTrace();
+		int idx = 0;
+		do {
+
+			if (sourceCodeFiles.contains(strace[idx].getClassName()))  {
+				allocLocation = strace[idx].getClassName() + ":" + strace[idx].getLineNumber();
+				break;
+			}
+
+		} while (++idx < strace.length);
+
+		// collect the measured allocation
+		if (allocLocation != null) {
+
+			final String objectID = toIdentifierString(newObj);
+			//System.out.println("objectID:" + objectID);
+			//System.out.println("allocationSite:" + allocLocation);
+			//System.out.println("size:" + size);
+			allocated(objectID, newObj.getClass().getName(), allocLocation, size);
+			// Following call creates a new PhantomReference (public class Cleaner extends PhantomReference<Object>)
+			create(newObj, new CleanerRunnable(objectID, allocLocation));
+
+		}
     }
     
     /**
