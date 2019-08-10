@@ -1,17 +1,17 @@
-<project name="LiveObjectMonitor" basedir=".">
+<project name="MemDefender" basedir=".">
   <description>
-    Builds the Live Object Monitor Java agent.
+    Builds the MemDefender Java agent.
   </description>
   <property name="src" location="src"/>
   <property name="build" location="build"/>
   <property name="dist"  location="dist"/>
 
-  <target name="init">
+  <target name="init" description="Build initialization">
     <mkdir dir="${build}"/>
     <mkdir dir="${dist}"/>
   </target>
 
-  <path id="LiveObjectMonitor.classpath">
+  <path id="MemDefender.classpath">
      <fileset dir="lib">
        <include name="**/*.jar"/>
      </fileset>
@@ -19,23 +19,26 @@
 
   <target name="base_compile" depends="init" description="basic compile">
     <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
-      <classpath refid="LiveObjectMonitor.classpath"/>
+      <classpath refid="MemDefender.classpath"/>
     </javac>
   </target>
 
-  <target name="dist" depends="base_compile" description="result">
+  <target name="build.javaagent" depends="base_compile" description="Build jar of javaagent, include manifest">
     <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
 	     classpath="lib/jarjar-1.0.jar" />
-    <jarjar destfile="${dist}/LiveObjectMonitor.jar">
+    <jarjar destfile="${dist}/MemDefender.jar">
       <manifest>
-	<attribute name="Boot-Class-Path" value="./LiveObjectMonitor.jar"/>
-	<attribute name="Premain-Class" value="org.uniHD.memory.LiveObjectMonitorAgent"/>
-	<attribute name="Can-Redefine-Classes" value="true" />
-	<attribute name="Can-Retransform-Classes" value="true" />
-	<attribute name="Main-Class" value="NotSuitableAsMain" />
+        <attribute name="Boot-Class-Path" value="./MemDefender.jar"/>
+        <attribute name="Premain-Class" value="org.uniHD.memory.MemDefenderAgent"/>
+        <attribute name="Can-Redefine-Classes" value="true" />
+        <attribute name="Can-Retransform-Classes" value="true" />
+        <attribute name="Main-Class" value="NotSuitableAsMain" />
       </manifest>
       <fileset dir="${build}"/>
-      <zipfileset src="lib/allocation.jar" />
+      <zipfileset src="lib/java-allocation-instrumenter-3.2.0.jar"/>
+      <zipfileset src="lib/flogger-0.4.jar"/>
+      <zipfileset src="lib/flogger-system-backend-0.4.jar"/>
+
     </jarjar>
   </target>
 
@@ -44,4 +47,5 @@
     <delete dir="${dist}"/>
   </target>
 
+  <target name="all" depends="build.javaagent" description="build all"/>
 </project>

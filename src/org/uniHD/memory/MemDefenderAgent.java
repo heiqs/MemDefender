@@ -14,20 +14,25 @@ import org.uniHD.memory.util.LOMServer;
 import com.google.monitoring.runtime.instrumentation.AllocationInstrumenter;
 import com.google.monitoring.runtime.instrumentation.AllocationRecorder;
 
-public class LiveObjectMonitorAgent {
+import com.google.common.flogger.FluentLogger;
 
+public class MemDefenderAgent {
+
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
 	public static void premain(String agentArgs, Instrumentation inst) throws IOException {
-		
+
+		logger.atInfo().log("[LOM Agent] Entered premain, arguments: %s", agentArgs);
+
 	    final List<String> args = Arrays.asList(agentArgs == null ? new String[0] : agentArgs.split(","));
 		
 	    // check # of arguments
- 		if (args.size() < 2 || args.size() > 3) {
+/* 		if (args.size() < 2 || args.size() > 3) {
  			
  			System.err.println("Wrong number of Arguments!");
  			printUsage();
  			System.exit(1);
- 		}
+ 		}*/
 	 		
  		// parse arguments
  		final String[] sourcePaths = args.get(0).split(":");
@@ -39,8 +44,11 @@ public class LiveObjectMonitorAgent {
  			}
  		}
 	 		
- 		// get the application name
- 		final String appName = args.get(1);
+ 		// get the optional application name
+		String appName = "memDefender-report";
+		if (args.size() > 1 ) {
+			appName = args.get(1);
+		}
  		
  		// parse the java-allocation-instrumenter args
  		String JAIArgs = "";
@@ -82,7 +90,7 @@ public class LiveObjectMonitorAgent {
 	 */
 	private final static void printUsage() {
 		
-		System.out.println("java -javaagent:LiveObjectMonitor.jar='<application_source_code_paths>,application_name[,manualOnly]' <your_application>\n" +
+		System.out.println("java -javaagent:MemDefender.jar='<application_source_code_paths>,application_name[,manualOnly]' <your_application>\n" +
 										"\t<source_code_paths>\t- a colon separated list of source code root directory paths for the application\n" + 
 										"\t<your_application>\t- all details needed to run your application.");
 	}
