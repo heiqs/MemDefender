@@ -56,7 +56,7 @@ public class TestCode {
         
         // delay execution: Thread.sleep(10000);
 		// Create 1e6 Strings
-		int NUM_ITER = 1000000;
+		int NUM_ITER = 10000;
 		Integer lastValue = 10;
 		for (int i = 0; i < NUM_ITER; i++) {
 			System.out.println("Last value is:" + lastValue );

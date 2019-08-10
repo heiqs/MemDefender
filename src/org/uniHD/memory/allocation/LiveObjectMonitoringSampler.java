@@ -46,6 +46,7 @@ public class LiveObjectMonitoringSampler implements Sampler {
     	config = configuration;
 		//add handler for garbage collection events
 		addGcHandler();
+		logger.atFine().log("LiveObjectMonitoringSampler constructor. Found srcCodeFiles =%s", sourceCodeFiles);
 	}
     
     /*
@@ -60,21 +61,29 @@ public class LiveObjectMonitoringSampler implements Sampler {
 		String allocLocation = null;
 		final StackTraceElement[] strace = new Exception().getStackTrace();
 		int idx = 0;
-		// todo: make the following filter for client-code-only more robust and faster
+		// todo: make the following filter for client-code-only faster, e.g. do not instrument any agent classes (contrary to now)
 		// The following checks whether any part of the source code paths is contained in one of the stack trace row,
 		// and if yes, this row is enhanced with corresp. source line number and considered as allocLocation
+		// todo: fix REAL ERROR! The sourceCodeFiles seem to have only the file name (without pre-directories), but
+		// strace[idx].getClassName() yields a fully-qualified name. For example, in the following run (see logs),
+		// the sourceCodeFiles containts only "TestCode" (1 set element), but strace[idx].getClassName()=org.uniHD.test.TestCode
+		// [FEIN|190810 20:01:17 855] LiveObjectMonitoringSampler constructor. Found srcCodeFiles =[TestCode] [org.uniHD.memory.allocation.LiveObjectMonitoringSampler <init>]
+		// [FEIN|190810 20:03:27 861] Comparing srcCodeFiles vs. strace[idx].getClassName()=org.uniHD.test.TestCode [CONTEXT ratelimit_period="5000 MILLISECONDS [skipped: 1423743]" ] [org.uniHD.memory.allocation.LiveObjectMonitoringSampler sampleAllocation]
 		do {
 			if (sourceCodeFiles.contains(strace[idx].getClassName()))  {
 				allocLocation = strace[idx].getClassName() + ":" + strace[idx].getLineNumber();
 				break;
+			} else {
+				logger.atFine().atMostEvery(5000, TimeUnit.MILLISECONDS).log("Comparing srcCodeFiles vs. strace[idx].getClassName()=%s",
+						strace[idx].getClassName());
 			}
 		} while (++idx < strace.length);
-        logger.atFine().atMostEvery(500, TimeUnit.MILLISECONDS).log("In sampleAllocation: allocLocation=%s, objectID=%s, desc=%s, strack=%s",
-				allocLocation, toIdentifierString(newObj), desc, strace);
 
         // collect the measured allocation
         if (allocLocation != null) {
-            final String objectID = toIdentifierString(newObj);
+			logger.atFine().atMostEvery(50, TimeUnit.MILLISECONDS).log("**** Found target class: allocLocation=%s, objectID=%s, desc=%s, strack=%s",
+					allocLocation, toIdentifierString(newObj), desc, strace);
+			final String objectID = toIdentifierString(newObj);
             //System.out.println("objectID:" + objectID);
             //System.out.println("allocationSite:" + allocLocation);
             //System.out.println("size:" + size);
